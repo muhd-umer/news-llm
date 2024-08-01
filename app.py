@@ -8,14 +8,13 @@ sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 import os
 from datetime import datetime, timedelta
 
+import pytz
 import streamlit as st
+from database import NewsDatabase
 from dotenv import load_dotenv
 from langchain.chains import LLMChain
 from langchain_google_genai import GoogleGenerativeAI
-import pytz
-
-from database import NewsDatabase
-from prompts import FOLLOW_UP_QUESTIONS_PROMPT, MAIN_SYSTEM_PROMPT, CHAT_RESPONSE_PROMPT
+from prompts import CHAT_RESPONSE_PROMPT, FOLLOW_UP_QUESTIONS_PROMPT, MAIN_SYSTEM_PROMPT
 
 load_dotenv()
 
@@ -92,10 +91,7 @@ def get_last_update():
         last_update = datetime.fromisoformat(last_update_str)
         last_update = last_update.replace(tzinfo=pytz.UTC)
 
-        pakistan_tz = pytz.timezone("Asia/Karachi")
-        pakistan_time = last_update.astimezone(pakistan_tz)
-
-        return pakistan_time.strftime("%Y-%m-%d %H:%M:%S (Pakistan Time)")
+        return last_update.strftime("%Y-%m-%d %H:%M:%S (Pakistan Time)")
     except Exception as e:
         print(f"Error reading last update time: {e}")
         return "Unknown"
