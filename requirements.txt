@@ -1,0 +1,16 @@
+requests
+pysqlite3-binary
+beautifulsoup4
+google
+sentence-transformers
+python-dotenv
+faiss-cpu
+numpy
+pytz
+langchain
+langchain-google-genai
+langchain-chroma
+langchain-community
+langchain-huggingface
+streamlit
+schedule
