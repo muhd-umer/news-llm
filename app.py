@@ -6,13 +6,12 @@ import sys
 sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytz
 import streamlit as st
 from database import NewsDatabase
 from dotenv import load_dotenv
-from langchain.chains import LLMChain
 from langchain_google_genai import GoogleGenerativeAI
 from prompts import CHAT_RESPONSE_PROMPT, FOLLOW_UP_QUESTIONS_PROMPT, MAIN_SYSTEM_PROMPT
 
@@ -160,9 +159,9 @@ def main():
                     ]
                 )
 
-                main_chain = LLMChain(llm=llm, prompt=MAIN_SYSTEM_PROMPT)
-                summary = main_chain.run(
-                    country=country, topic=selected_topic, context=context
+                main_chain = MAIN_SYSTEM_PROMPT | llm
+                summary = main_chain.invoke(
+                    {"country": country, "topic": selected_topic, "context": context}
                 )
 
                 if summary.strip():
@@ -172,10 +171,8 @@ def main():
                     ]
                     st.session_state.analysis_generated = True
 
-                    questions_chain = LLMChain(
-                        llm=llm, prompt=FOLLOW_UP_QUESTIONS_PROMPT
-                    )
-                    follow_up = questions_chain.run(summary=summary)
+                    questions_chain = FOLLOW_UP_QUESTIONS_PROMPT | llm
+                    follow_up = questions_chain.invoke({"summary": summary})
                     add_message("assistant", follow_up)
                 else:
                     st.session_state.analysis_generated = False
@@ -210,12 +207,14 @@ def main():
                 add_message("human", user_input)
                 with st.spinner("Generating response..."):
                     chat_history = get_chat_history()
-                    response_chain = LLMChain(llm=llm, prompt=CHAT_RESPONSE_PROMPT)
-                    response = response_chain.run(
-                        country=st.session_state.country,
-                        topic=st.session_state.topic,
-                        user_input=user_input,
-                        chat_history=chat_history,
+                    response_chain = CHAT_RESPONSE_PROMPT | llm
+                    response = response_chain.invoke(
+                        {
+                            "country": st.session_state.country,
+                            "topic": st.session_state.topic,
+                            "user_input": user_input,
+                            "chat_history": chat_history,
+                        }
                     )
                     add_message("assistant", response)
                 st.rerun()
