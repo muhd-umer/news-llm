@@ -104,7 +104,7 @@ class NewsDatabase:
         def update_job():
             self.update_database()
 
-        schedule.every(4).hours.do(update_job)
+        schedule.every(24).hours.do(update_job)
 
         def run_schedule():
             while True:
