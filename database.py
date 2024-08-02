@@ -13,7 +13,6 @@ from langchain_chroma import Chroma
 from langchain_community.vectorstores import VectorStore
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
-
 from scraper import NewsScraper
 
 cfg = {
@@ -105,7 +104,7 @@ class NewsDatabase:
         def update_job():
             self.update_database()
 
-        schedule.every(8).hours.do(update_job)
+        schedule.every(4).hours.do(update_job)
 
         def run_schedule():
             while True:
