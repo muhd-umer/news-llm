@@ -12,7 +12,7 @@ import pytz
 import streamlit as st
 from database import NewsDatabase
 from dotenv import load_dotenv
-from langchain_google_genai import GoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from prompts import CHAT_RESPONSE_PROMPT, FOLLOW_UP_QUESTIONS_PROMPT, MAIN_SYSTEM_PROMPT
 
 load_dotenv()
@@ -24,7 +24,7 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 if not google_api_key:
     raise ValueError("Please set the GOOGLE_API_KEY environment variable")
 
-llm = GoogleGenerativeAI(
+llm = ChatGoogleGenerativeAI(
     model="gemini-1.5-flash", google_api_key=google_api_key, temperature=0.15
 )
 
@@ -164,16 +164,16 @@ def main():
                     {"country": country, "topic": selected_topic, "context": context}
                 )
 
-                if summary.strip():
-                    add_message("assistant", summary)
+                if summary.content.strip():
+                    add_message("assistant", summary.content)
                     st.session_state.sources = [
                         doc.metadata["source"] for doc in relevant_documents
                     ]
                     st.session_state.analysis_generated = True
 
                     questions_chain = FOLLOW_UP_QUESTIONS_PROMPT | llm
-                    follow_up = questions_chain.invoke({"summary": summary})
-                    add_message("assistant", follow_up)
+                    follow_up = questions_chain.invoke({"summary": summary.content})
+                    add_message("assistant", follow_up.content)
                 else:
                     st.session_state.analysis_generated = False
                     add_message(
@@ -216,7 +216,7 @@ def main():
                             "chat_history": chat_history,
                         }
                     )
-                    add_message("assistant", response)
+                    add_message("assistant", response.content)
                 st.rerun()
 
     st.markdown(
