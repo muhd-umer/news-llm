@@ -9,6 +9,7 @@ numpy
 pytz
 langchain
 langchain-google-genai
+langchain-openai
 langchain-chroma
 langchain-community
 langchain-huggingface
