@@ -37,17 +37,17 @@ NewsLLM follows a robust workflow to provide accurate and insightful news summar
 
 ## Installation
 
-1. **Clone the repository:**
+1. Clone the repository:
     ```bash
     git clone https://github.com/muhd-umer/news-llm.git
     ```
 
-2. **Install dependencies:**
+2. Install dependencies:
     ```bash
     pip install -r requirements.txt
     ```
     
-3. **Set API Key:** Obtain an API key for Groq and store it in a `.env` file as `GROQ_API_KEY="<your_api_key>"`.
+3. Set API Key: Obtain an API key for Groq and store it in a `.env` file as `GROQ_API_KEY="<your_api_key>"`.
 
 ## Usage
 
