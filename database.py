@@ -89,7 +89,9 @@ class NewsDatabase:
             article["topic"] = topic
             article["country"] = country
         results.extend(new_articles)
-        logger.info(f"  Found {len(new_articles)} new articles for topic: {topic}")
+        logger.info(
+            f"  Found {len(new_articles)} new articles for (country | topic: {country} | {topic})"
+        )
 
     def update_database(self):
         logger.info("Starting database update...")
