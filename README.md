@@ -12,23 +12,23 @@ NewsLLM follows a robust workflow to provide accurate and insightful news summar
   <img src="resources/block.png" width="90%">
 </p>
 
-1. **Data Acquisition and Scraping:**
+1. **Data Acquisition**
     - NewsLLM utilizes a custom web scraper (`scraper.py`) to gather news articles from various sources.
     - The scraper targets specific countries and topics.
     - For each topic and country combination, it scrapes up to _10 relevant news articles_ from Google Search results to ensure a diverse range of perspectives are considered.
 
-2. **Database Creation and Management:**
+2. **Database** (ChromaDB)
     - Scraped news articles are processed and stored in a vector database using the `Chroma` library.
     - This database allows for efficient storage and retrieval of news articles based on their semantic similarity.
     - Each article is represented as a vector embedding, capturing its core meaning and context.
     - Database is updated automatically every 24 hours to ensure the information remains current.
 
-3. **Query Processing and Context Retrieval:**
+3. **Context Retrieval**
     - When a user submits a query (country and topic), NewsLLM retrieves the most relevant articles from the database.
     - User query is transformed into a vector embedding and compared against the embeddings of the stored articles.
     - Top _k=7_ most similar articles are selected as the context for generating the summary and analysis.
 
-4. **LLM-Powered Summary and Analysis Generation:**
+4. **Output Generation**
     - NewsLLM utilizes the `Groq` API and uses the `llama-3.1-70b-versatile` model for output generation.
     - Formed context is fed to the LLM, along with carefully constructed prompts designed to elicit a comprehensive summary and analysis.
     - LLM generates a structured response covering key points, trends, context, impacts, controversies, statistical insights, global relevance, and future outlook.
@@ -51,16 +51,19 @@ NewsLLM follows a robust workflow to provide accurate and insightful news summar
 
 ## Usage
 
-1. **Run the application:**
+1. Create initial database as:
+    ```bash
+    python database.py
+    ```
+    
+2. Run the application using:
     ```bash
     streamlit run app.py
     ```
 
-2. **Select a country and topic from the sidebar.**
-
-3. **Click "Analyze news" to generate a summary and analysis.**
-
-4. **Ask follow-up questions in the chat interface.**
+3. Select a country and topic from the sidebar.
+4. Click _"Analyze news"_ to generate a summary and analysis.
+5. Ask follow-up questions in the chat interface.
 
 ## Tech Stack
 
