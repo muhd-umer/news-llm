@@ -4,24 +4,29 @@ __import__("pysqlite3")
 import sys
 
 sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+
 import os
 from datetime import datetime
 
-import google.api_core.exceptions
-import openai
 import pytz
 import streamlit as st
 from database import NewsDatabase
 from dotenv import load_dotenv
-from langchain.schema import HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from prompts import CHAT_RESPONSE_PROMPT, FOLLOW_UP_QUESTIONS_PROMPT, MAIN_SYSTEM_PROMPT
 
 load_dotenv()
 
 db = NewsDatabase()
 db.start_automatic_updates()
+
+groq_api_key = os.getenv("GROQ_API_KEY")
+if not groq_api_key:
+    raise ValueError("Please set the GROQ_API_KEY environment variable")
+
+llm = ChatGroq(
+    model="llama-3.1-70b-versatile", groq_api_key=groq_api_key, temperature=0.0
+)
 
 custom_css = """
     <style>
@@ -53,25 +58,6 @@ custom_css = """
 """
 
 
-def api_key_input():
-    if st.session_state.api_key and st.session_state.api_key_valid:
-        st.success("API key added successfully!")
-    else:
-        api_key = st.text_input("Enter your API key:", type="password")
-        if api_key:
-            if validate_api_key(st.session_state.model, api_key):
-                st.session_state.api_key = api_key
-                st.session_state.api_key_valid = True
-                st.success("API key added successfully!")
-                st.rerun()
-            else:
-                st.error("Invalid API key. Please try again.")
-                st.session_state.api_key = None
-                st.session_state.api_key_valid = False
-        else:
-            st.warning("Please enter a valid API key.")
-
-
 def initialize_session_state():
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -83,12 +69,6 @@ def initialize_session_state():
         st.session_state.topic = None
     if "analysis_generated" not in st.session_state:
         st.session_state.analysis_generated = False
-    if "api_key" not in st.session_state:
-        st.session_state.api_key = None
-    if "api_key_valid" not in st.session_state:
-        st.session_state.api_key_valid = False
-    if "model" not in st.session_state:
-        st.session_state.model = "gemini"
 
 
 def display_chat():
@@ -129,45 +109,6 @@ def get_last_update():
         return "Unknown"
 
 
-def validate_api_key(model, api_key):
-    try:
-        if model == "gemini":
-            llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash", google_api_key=api_key, temperature=0.15
-            )
-            # Make a simple API call
-            llm.invoke([HumanMessage(content="Hello")])
-        elif model == "openai":
-            llm = ChatOpenAI(
-                model="gpt-3.5-turbo", openai_api_key=api_key, temperature=0.15
-            )
-            # Make a simple API call
-            llm.invoke([HumanMessage(content="Hello")])
-        return True
-    except (
-        google.api_core.exceptions.GoogleAPIError,
-        openai.OpenAIError,
-        ValueError,
-    ) as e:
-        print(f"API key validation error: {e}")
-        return False
-
-
-def initialize_llm():
-    if st.session_state.model == "gemini":
-        return ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
-            google_api_key=st.session_state.api_key,
-            temperature=0.15,
-        )
-    elif st.session_state.model == "openai":
-        return ChatOpenAI(
-            model="gpt-3.5-turbo",
-            openai_api_key=st.session_state.api_key,
-            temperature=0.15,
-        )
-
-
 def main():
     initialize_session_state()
 
@@ -180,14 +121,8 @@ def main():
         unsafe_allow_html=True,
     )
 
-    st.sidebar.markdown("#### Model Settings")
-    model = st.sidebar.selectbox("Choose a model:", ["Gemini", "OpenAI"])
-    st.session_state.model = model.lower()
-
-    api_key_input()
-
     st.sidebar.markdown("#### Prompt")
-    countries = ["USA", "UK", "Canada", "Australia", "Pakistan", "International"]
+    countries = ["USA", "UK", "Pakistan", "International"]
     topics = [
         "Sports ⚽",
         "Entertainment 🎬",
@@ -202,14 +137,7 @@ def main():
     selected_topic = st.sidebar.selectbox("Select a topic:", topics)
     selected_topic = selected_topic.split(" ")[0].lower()
 
-    analyze_button = st.sidebar.button(
-        "Analyze news",
-        use_container_width=True,
-        type="primary",
-        disabled=not st.session_state.api_key_valid,
-    )
-
-    if analyze_button:
+    if st.sidebar.button("Analyze news", use_container_width=True, type="primary"):
         reset_chat()
         st.session_state.country = country
         st.session_state.topic = selected_topic
@@ -231,7 +159,6 @@ def main():
                     ]
                 )
 
-                llm = initialize_llm()
                 main_chain = MAIN_SYSTEM_PROMPT | llm
                 summary = main_chain.invoke(
                     {"country": country, "topic": selected_topic, "context": context}
@@ -280,7 +207,6 @@ def main():
                 add_message("human", user_input)
                 with st.spinner("Generating response..."):
                     chat_history = get_chat_history()
-                    llm = initialize_llm()
                     response_chain = CHAT_RESPONSE_PROMPT | llm
                     response = response_chain.invoke(
                         {
