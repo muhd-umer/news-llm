@@ -8,8 +8,7 @@ faiss-cpu
 numpy
 pytz
 langchain
-langchain-google-genai
-langchain-openai
+langchain-groq
 langchain-chroma
 langchain-community
 langchain-huggingface
