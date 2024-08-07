@@ -5,18 +5,16 @@ import threading
 import time
 from datetime import datetime
 from typing import Dict, List
-
+import logging
 import schedule
 from langchain_chroma import Chroma
-
-# from langchain_community.vectorstores import Chroma, VectorStore
 from langchain_community.vectorstores import VectorStore
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from scraper import NewsScraper
 
 cfg = {
-    "COUNTRIES": ["USA", "UK", "Canada", "Australia", "Pakistan", "International"],
+    "COUNTRIES": ["USA", "UK", "Pakistan", "International"],
     "TOPICS": [
         "sports",
         "entertainment",
@@ -27,6 +25,12 @@ cfg = {
         "technology",
     ],
 }
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 class NewsDatabase:
@@ -70,35 +74,46 @@ class NewsDatabase:
             for article in articles
         ]
         self.vector_store.add_documents(documents)
-        # self.vector_store.persist() SInce Chroma 0.4.x, the vector store is automatically persisted
 
     def search(
-        self, query: str, country: str, topic: str, k: int = 7
+        self, query: str, country: str, topic: str, k: int = 10
     ) -> List[Document]:
         filter_dict = {"$and": [{"country": country}, {"topic": topic}]}
         return self.vector_store.similarity_search(query, k=k, filter=filter_dict)
 
-    def update_database(self):
-        print("Starting database update...")
-        all_new_articles = []
-        for country in self.countries:
-            print(f"Scraping news for country: {country}")
-            for topic in self.topics:
-                print(f"  Scraping topic: {topic}")
-                new_articles = self.scraper.scrape_news(
-                    country, [topic], urls_per_topic=10
-                )[topic]
-                for article in new_articles:
-                    article["topic"] = topic
-                    article["country"] = country
-                all_new_articles.extend(new_articles)
-                print(f"  Found {len(new_articles)} new articles for topic: {topic}")
+    def _scrape_topic(self, country: str, topic: str, results: List[Dict[str, str]]):
+        new_articles = self.scraper.scrape_news(country, [topic], urls_per_topic=10)[
+            topic
+        ]
+        for article in new_articles:
+            article["topic"] = topic
+            article["country"] = country
+        results.extend(new_articles)
+        logger.info(f"  Found {len(new_articles)} new articles for topic: {topic}")
 
-        print(f"Adding {len(all_new_articles)} new articles to the database...")
+    def update_database(self):
+        logger.info("Starting database update...")
+        all_new_articles = []
+        threads = []
+
+        for country in self.countries:
+            logger.info(f"Scraping news for country: {country}")
+            for topic in self.topics:
+                logger.info(f"  Scraping topic: {topic}")
+                thread = threading.Thread(
+                    target=self._scrape_topic, args=(country, topic, all_new_articles)
+                )
+                threads.append(thread)
+                thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        logger.info(f"Adding {len(all_new_articles)} new articles to the database...")
         self.add_articles(all_new_articles)
         self._save_last_update()
         self.last_update = datetime.now()
-        print(f"Database updated at {self.last_update}")
+        logger.info(f"Database updated at {self.last_update}")
 
     def start_automatic_updates(self):
         def update_job():
