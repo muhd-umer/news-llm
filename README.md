@@ -9,7 +9,7 @@ NewsLLM is a RAG-based LLM application designed to analyze and summarize news ar
 NewsLLM follows a robust workflow to provide accurate and insightful news summaries:
 
 <p align="center">
-  <img src="resources/block.png" width="80%">
+  <img src="resources/block.png" width="90%">
 </p>
 
 1. **Data Acquisition and Scraping:**
