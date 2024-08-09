@@ -47,7 +47,7 @@ NewsLLM follows a robust workflow to provide accurate and insightful news summar
     pip install -r requirements.txt
     ```
     
-3. Set API Key: Obtain an API key for Groq and store it in a `.env` file as `GROQ_API_KEY="<your_api_key>"`.
+3. Obtain an API key for Groq and store it in a `.env` file as `GROQ_API_KEY="<your_api_key>"`.
 
 ## Usage
 
