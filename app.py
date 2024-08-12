@@ -125,7 +125,11 @@ def get_last_update():
 
 
 def main():
+    GENERATION_LIMIT = 5
+    COOLDOWN_MINUTES = 30  # in minutes
+
     initialize_session_state()
+    update_generation_count(COOLDOWN_MINUTES)
 
     st.set_page_config(
         layout="wide", page_title="NewsLLM", page_icon="images/favicon.ico"
@@ -135,8 +139,6 @@ def main():
         "<img src='https://raw.githubusercontent.com/muhd-umer/news-llm/main/images/logo.png' width='375' class='logo top-space'>",
         unsafe_allow_html=True,
     )
-    GENERATION_LIMIT = 5
-    COOLDOWN_MINUTES = 30  # in minutes
 
     st.sidebar.markdown("#### Prompt")
     countries = ["USA", "UK", "Pakistan", "International"]
@@ -154,7 +156,6 @@ def main():
     selected_topic = st.sidebar.selectbox("Select a topic:", topics)
     selected_topic = selected_topic.split(" ")[0].lower()
 
-    update_generation_count(COOLDOWN_MINUTES)
     button_disabled = st.session_state.generation_count >= GENERATION_LIMIT
 
     if st.sidebar.button(
