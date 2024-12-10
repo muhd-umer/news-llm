@@ -26,7 +26,7 @@ if not groq_api_key:
     raise ValueError("Please set the GROQ_API_KEY environment variable")
 
 llm = ChatGroq(
-    model="llama-3.1-70b-versatile", groq_api_key=groq_api_key, temperature=0.0
+    model="llama-3.3-70b-versatile", groq_api_key=groq_api_key, temperature=0.2
 )
 
 custom_css = """
