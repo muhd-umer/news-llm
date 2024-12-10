@@ -13,7 +13,7 @@ import pytz
 import streamlit as st
 from database import NewsDatabase
 from dotenv import load_dotenv
-from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from prompts import CHAT_RESPONSE_PROMPT, FOLLOW_UP_QUESTIONS_PROMPT, MAIN_SYSTEM_PROMPT
 
 load_dotenv()
@@ -21,12 +21,12 @@ load_dotenv()
 db = NewsDatabase()
 db.start_automatic_updates()
 
-groq_api_key = os.getenv("GROQ_API_KEY")
-if not groq_api_key:
-    raise ValueError("Please set the GROQ_API_KEY environment variable")
+google_api_key = os.getenv("GOOGLE_API_KEY")
+if not google_api_key:
+    raise ValueError("Please set the google_api_key environment variable")
 
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile", groq_api_key=groq_api_key, temperature=0.2
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash", google_api_key=google_api_key, temperature=0.2
 )
 
 custom_css = """
